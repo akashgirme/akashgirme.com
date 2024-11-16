@@ -1,0 +1,120 @@
+import { AnimatedName } from '../animated-name.tsx';
+
+# B-Navigator: EV-first mobility solution
+
+<AnimatedName />
+
+export const metadata = {
+  title: 'B-Navigator: EV-first mobility solution',
+  description:
+    'EV-first mobility solution providing win-win situation for both drivers and customers',
+  alternates: {
+    canonical: '/projects/b-navigator',
+  },
+};
+
+
+# System Architecture & flow of Code-Judge
+
+## Diagram
+
+![image](/assets/projects/code-judge/architecture.png)
+
+## Flow
+
+## 1. Client
+
+- **Role**: User Interface
+- **Description**: The client is the front-end interface where users can write and submit code for a specific problem.
+- **Flow**:
+  1. **Code Submission**: The user writes code and submits it through the front end.
+  2. **API Interaction**: The client sends the code and problem details as a request to the API.
+  3. **Polling**: After submission, the client continuously polls the API (e.g., every second) to check the submission status until a result is received.
+
+## 2. API
+
+- **Role**: Backend Service for Handling Submissions
+- **Description**: The API handles incoming requests from the client, manages submission records, and coordinates with the Code Execution Engine.
+- **Flow**:
+  1. **Request Reception**: The API receives the code submission request from the client.
+  2. **Object Storage**: Instead of storing the code and test cases in the database, the API saves them in an **object store** (AWS S3). This minimizes the load on the database and optimizes storage.
+  3. **Submission Entry**: It creates a new submission entry in the database, storing the metadata such as submission ID, user ID, problem ID, etc., without storing the code or test cases themselves.
+  4. **Task Creation**: The API sends a request with the submission payload to the Code-Execution-Engine-Server.
+  5. **Response to Client**: The API responds to the client with a submission ID and continues to handle polling requests from the client.
+
+## 3. Code-Execution-Engine-Server
+
+- **Role**: Task Queue Management and Coordination
+- **Description**: The Code Execution Engine Server is responsible for managing the task queue, receiving job submissions, and processing results from the workers.
+- **Flow**:
+  1. **Request Reception**: Receives the submission request from the API.
+  2. **Job Queueing**: The server enqueues the job in the **task queue** (using BullMQ-Redis).
+  3. **Acknowledgment**: It sends a response back to the API, indicating that the job has been successfully queued.
+  4. **Result Processing**: The server subscribes to the **result queue** where workers post the results after executing the code.
+  5. **Callback to API**: Once the result is received from the worker, the server sends a callback to the API with the execution result (e.g., success/failure, output, etc.).
+
+## 4. Code-Execution-Engine-Worker
+
+- **Role**: Job Execution
+- **Description**: Each worker is responsible for consuming tasks from the task queue, executing the code in their respective language environment (e.g., C, C++, Go), and posting the result to the result queue.
+- **Flow**:
+  1. **Task Consumption**: The worker consumes a job from the task queue, which contains the code and test cases.
+  2. **Code Execution**: The worker executes the code in a secure, isolated environment (In containerize environment) and runs the code against the retrieved test cases.
+  3. **Result Posting**: After execution, the worker posts the result (e.g., output, errors, time/memory usage) to the **result queue** for further processing by the Code-Execution-Engine-Server.
+
+## 5. Code-Execution-Engine-Server (Result Handling)
+
+- **Role**: Result Handling
+- **Description**: After workers post the result to the result queue, the server processes and communicates this result back to the API.
+- **Flow**:
+  1. **Result Processing**: The server subscribes to the result queue, retrieves the result from the worker, and processes it.
+  2. **Callback to API**: The server sends the processed result to the API, indicating whether the code passed or failed the test cases, along with any additional output or error messages.
+
+## 6. API (Result Handling)
+
+- **Role**: Update Submission Entity
+- **Description**: Once the API receives the result from the Code-Execution-Engine-Server, it updates the submission entity with the result and finalizes the process.
+- **Flow**:
+  1. **Result Reception**: Receives the result callback from the Code-Execution-Engine-Server.
+  2. **Database Update**: Updates the submission record in the database with the final result, including any execution details like time, memory usage, and status (success/failure).
+  3. **Client Response**: When the client polls for the status, the API now returns the updated result, informing the client of the final submission status.
+
+## Flow Diagram
+
+![image](/assets/projects/code-judge/flow.png)
+
+## Sequence Diagram
+
+![image](/assets/projects/code-judge/sequence.png)
+
+&nbsp;
+
+# Techniques & Methods for optimal workflow
+
+- **Database Optimization**: By offloading large objects (code and test cases) to an object store, the system reduces database load and improves scalability, making the database primarily responsible for metadata storage (e.g., submission entries).
+
+- **Asynchronous Processing**: The system uses task queues (managed by the Code-Execution-Engine-Server) to handle submissions asynchronously. This ensures that the client isn’t blocked while waiting for code execution, and workers can process jobs at their own pace.
+
+- **Isolated Execution**: Workers execute code in isolated environments to ensure security and control over resources like CPU and memory. This isolation prevents one job from affecting others.
+
+- **Polling Mechanism**: The client continuously polls the API to check the submission status. This ensures that the client remains responsive while waiting for the result.
+
+- **Queue Management**: Redis (BullMQ) manages task distribution to workers and collects results. It allows for scalable and distributed job processing.
+
+&nbsp;
+
+# Database Model
+
+## Relationship between entities
+
+![image](/assets/projects/code-judge/entity-relation.png)
+
+## Database Model
+
+![image](/assets/projects/code-judge/database-model.png)
+
+&nbsp;
+
+# Deployment Infrastructure
+
+![image](/assets/projects/code-judge/infra.png)
