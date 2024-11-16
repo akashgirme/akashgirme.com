@@ -45,6 +45,7 @@ function Footer() {
     { name: '@akashgirme_', url: 'https://www.x.com/akashgirme_' },
     { name: 'linkedin', url: 'https://www.linkedin.com/in/akash-girme' },
     { name: 'github', url: 'https://github.com/akashgirme' },
+    {name: 'Inspired by Lee Robinson', url: 'https://leerob.com/'}
   ];
 
   return (

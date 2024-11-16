@@ -4,7 +4,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "delete": "rm -rf app/n"
+    "delete": "rm -rf app/blog app/projects"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.0.1",
