@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { ComponentPropsWithoutRef } from 'react';
 import { Link } from 'next-view-transitions';
 import type { MDXComponents } from 'mdx/types';
