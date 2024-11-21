@@ -15,3 +15,102 @@ export const metadata = {
 
 [Source Code on Github](https://www.github.com/akashgirme/bn-backend)  
 Project is in development.
+
+**B-Navigator** is an innovative bike aggregation service that allows users to search for rides and also publish their own rides, enabling them to accept other users as customers. This platform primarily focuses on electric vehicles (EVs), promoting sustainable transportation options.
+## Key Features
+
+- **Ride Searching**: Users can easily search for available rides in their vicinity.
+- **Ride Publishing**: Users have the option to publish their own rides, allowing them to offer transportation services to others.
+- **Customer Acceptance**: Users can accept other riders as customers for their published rides. 
+
+## Technology Stack
+The backend service of B-Navigator is built using following technologies:
+- **Golang** serves as the primary language for backend development.
+- **PostgreSQL** is utilized as the primary SQL database, Also used utilized to store geospatial indexing.
+- **Redis** is used for caching and other in-memory storage applications.
+- **RabbitMQ** is used for handling asynchronous communication between services, ensuring smooth operations and scalability.
+- The **Uber H3** library is integrated for managing geospatial indexing, facilitating precise location tracking and mapping.
+- **Google Maps API** is utilized for mapping services, providing users with accurate navigation and distance calculations.
+
+## Application System Design
+&nbsp;  
+
+![image](/assets/projects/b-navigator/sd.png)
+&nbsp;
+
+The platform is built using a monolithic architecture, with various modules serving distinct functions within the application.
+
+## Components
+1. **User/Client App (Android)**
+2. **Rider App (Android)**
+3. **API Gateway/Load Balancer**
+4. **User Module/Service**
+5. **Ride Module**
+6. **Ride Matching Service**
+7. **Location Service**
+8. **Notification Service**
+9. **PostgreSQL Database**
+10. **Match Queue**
+11. **Fare Estimation & Mapping Module**
+
+## Detailed Component Descriptions
+
+### 1. User/Client App (Android)
+The User App serves as the primary interface for customers to interact with the platform. Users can:
+- Search for available rides.
+- Book rides based on their preferences.
+- View ride history and payment details.
+
+### 2. Rider App (Android)
+The Rider App is designed for the riders providing services on the platform. Key features include:
+- Viewing incoming ride requests.
+- Accepting or rejecting ride requests.
+- Accessing ride history and earnings.
+
+### 3. API Gateway/Load Balancer
+This component manages incoming requests to the backend services, ensuring efficient load distribution and system reliability. It handles:
+- SSL termination.
+- Authentication and authorization.
+- Routing requests to appropriate services.
+
+### 4. User Module/Service
+This module is responsible for managing user accounts and rider registrations, including:
+- Registration and verification of users and riders.
+- Handling user-related activities such as profile updates and password management.
+
+### 5. Ride Module
+The Ride Module orchestrates all tasks related to ride requests:
+- It creates entries in the database with relevant metadata (source, destination, etc.).
+- Requests fare estimation from the Fare Estimation & Mapping Module.
+- Communicates with the Ride Matching Service via a message queue to find available riders.
+
+### 6. Ride Matching Service
+This service matches ride requests with nearby riders:
+- It subscribes to the Match Queue, receiving job requests from the Ride Module.
+- Searches for nearby riders using geospatial data stored in PostgreSQL.
+- Sends notifications to riders through the Notification Service, allowing them a 10-second window to accept or reject the ride request.
+
+### 7. Location Service
+The Location Service tracks rider locations in real-time:
+- The Rider App continuously sends location updates to this service.
+- Utilizes Uber's H3 Library for geospatial indexing and stores this data in PostgreSQL.
+
+### 8. Notification Service
+This service manages notifications sent to both users and riders:
+- Sends alerts for ride confirmations, cancellations, and other important updates.
+
+### 9. PostgreSQL Database
+The primary database for storing all essential data, including:
+- User information.
+- Ride details.
+- Payment transactions.
+- Geospatial data for efficient location tracking.
+
+### 10. Match Queue
+A communication queue that facilitates interaction between the Ride Module and Ride Matching Service:
+- Ensures that ride matching does not block the main ride service while waiting for a response.
+
+### 11. Fare Estimation & Mapping Module
+This module calculates fares based on distance and time estimates:
+- Integrates with Google Maps API to retrieve distance and time between source and destination points.
+- Computes fare estimates based on predefined pricing models.
