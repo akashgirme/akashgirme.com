@@ -42,10 +42,8 @@ export default function RootLayout({
 
 function Footer() {
   const links = [
-    { name: '@akashgirme_', url: 'https://www.x.com/akashgirme_' },
     { name: 'linkedin', url: 'https://www.linkedin.com/in/akash-girme' },
-    { name: 'github', url: 'https://github.com/akashgirme' },
-    {name: 'Inspired by leerob', url: 'https://leerob.com/'}
+    { name: 'github', url: 'https://github.com/akashgirme' }
   ];
 
   return (
